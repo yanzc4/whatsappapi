@@ -3,6 +3,7 @@ const makeWASocket = require('@whiskeysockets/baileys').default;
 const { useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const QRCode  = require('qrcode');
 const fs = require('fs');
+const axios = require('axios');
 
 // Crear la aplicación de Express
 const app = express();
@@ -90,7 +91,12 @@ app.post('/send-pdf', async (req, res) => {
     }
 
     try {
-        const pdfBuffer = fs.readFileSync(pdfPath);
+        const response = await axios({
+            url: pdfPath,
+            method: 'GET',
+            responseType: 'arraybuffer', // Obtener el archivo como buffer
+        });
+        const pdfBuffer = Buffer.from(response.data, 'binary');
         const result = await conn.sendMessage(phoneNumber + '@s.whatsapp.net', { document: pdfBuffer, mimetype: 'application/pdf' });
         res.status(200).send(`PDF enviado: ${result}`);
     } catch (error) {
@@ -98,6 +104,7 @@ app.post('/send-pdf', async (req, res) => {
         res.status(500).send('Error al enviar PDF.');
     }
 });
+
 
 // Iniciar el servidor
 const PORT = 3000;
