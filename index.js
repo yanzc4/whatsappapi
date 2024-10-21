@@ -20,7 +20,7 @@ async function startWhatsApp() {
         if (qr) {
             const qrImagePath = 'whatsapp-qr.png';
             await QRCode.toFile(qrImagePath, qr);
-            console.log(`QR guardado como imagen en ${qrImagePath}`);
+            console.log('QR code generated. Scan it with WhatsApp to authenticate:\n', qr);
         }
 
 
