@@ -1,7 +1,7 @@
 const express = require('express');
 const makeWASocket = require('@whiskeysockets/baileys').default;
 const { useMultiFileAuthState } = require('@whiskeysockets/baileys');
-const qrcodeTerminal = require('qrcode-terminal');
+const QRCode  = require('qrcode');
 const fs = require('fs');
 
 // Crear la aplicación de Express
@@ -12,10 +12,17 @@ let conn; // Declarar una variable global para almacenar el socket de WhatsApp
 // Función para iniciar la conexión de WhatsApp
 async function startWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
-    conn = makeWASocket({ auth: state, printQRInTerminal: true });
+    conn = makeWASocket({ auth: state });
 
     conn.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
+        const { qr, connection, lastDisconnect } = update;
+
+        if (qr) {
+            const qrImagePath = 'whatsapp-qr.png';
+            await QRCode.toFile(qrImagePath, qr);
+            console.log(`QR guardado como imagen en ${qrImagePath}`);
+        }
+
 
         if (connection === 'close') {
             console.log('Conexión cerrada.');
