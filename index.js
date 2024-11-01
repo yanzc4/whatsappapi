@@ -1,7 +1,7 @@
 const express = require('express');
 const makeWASocket = require('@whiskeysockets/baileys').default;
 const { useMultiFileAuthState } = require('@whiskeysockets/baileys');
-const QRCode = require('qrcode');
+const QRCode  = require('qrcode');
 const fs = require('fs');
 const axios = require('axios');
 
@@ -10,12 +10,8 @@ const app = express();
 app.use(express.json()); // Para parsear el cuerpo de las solicitudes JSON
 
 let conn; // Declarar una variable global para almacenar el socket de WhatsApp
-let isConnected = false; // Variable para verificar si la conexión ya está establecida
-
 // Función para iniciar la conexión de WhatsApp
 async function startWhatsApp() {
-    if (isConnected) return; // Evitar que se vuelva a conectar si ya está conectado
-
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
     conn = makeWASocket({ auth: state });
 
@@ -28,9 +24,9 @@ async function startWhatsApp() {
             console.log('QR code generated. Scan it with WhatsApp to authenticate:\n', qr);
         }
 
+
         if (connection === 'close') {
             console.log('Conexión cerrada.');
-            isConnected = false;
 
             if (lastDisconnect.error.output.statusCode !== 401) {
                 console.log('Reconectando...');
@@ -40,7 +36,6 @@ async function startWhatsApp() {
             }
         } else if (connection === 'open') {
             console.log('Conexión establecida.');
-            isConnected = true;
             conn.ev.on('creds.update', saveCreds);
         } else if (connection === 'connecting') {
             console.log('Conectando...');
@@ -51,18 +46,27 @@ async function startWhatsApp() {
         await saveCreds();
         console.log('Credenciales guardadas.');
     });
+
+    conn.ev.on('error', (error) => {
+        console.error('Error de conexión:', error);
+        // Puedes añadir lógica adicional aquí para manejar errores específicos
+    });
+
+    conn.ev.on('registered', () => {
+        console.log('Registro exitoso en WhatsApp.');
+    });
+    
+    conn.ev.on('notLoggedIn', () => {
+        console.log('No has iniciado sesión, intentando registro...');
+        // Aquí puedes agregar lógica adicional si es necesario para manejar el registro
+    });
 }
 
-// Middleware para iniciar la conexión antes de manejar cada solicitud
-async function ensureWhatsAppConnection(req, res, next) {
-    if (!isConnected) {
-        await startWhatsApp();
-    }
-    next();
-}
+// Llamar a la función para iniciar la conexión
+startWhatsApp().catch(console.error);
 
 // Ruta para enviar un mensaje de texto
-app.post('/send-message', ensureWhatsAppConnection, async (req, res) => {
+app.post('/send-message', async (req, res) => {
     const { phoneNumber, message } = req.body;
 
     if (!phoneNumber || !message) {
@@ -79,7 +83,7 @@ app.post('/send-message', ensureWhatsAppConnection, async (req, res) => {
 });
 
 // Ruta para enviar un PDF
-app.post('/send-pdf', ensureWhatsAppConnection, async (req, res) => {
+app.post('/send-pdf', async (req, res) => {
     const { phoneNumber, pdfPath } = req.body;
 
     if (!phoneNumber || !pdfPath) {
@@ -100,6 +104,7 @@ app.post('/send-pdf', ensureWhatsAppConnection, async (req, res) => {
         res.status(500).send('Error al enviar PDF.');
     }
 });
+
 
 // Iniciar el servidor
 const PORT = 3000;
