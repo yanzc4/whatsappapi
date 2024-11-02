@@ -1,0 +1,3 @@
+## comando para status
+
+    pm2 list
