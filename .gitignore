@@ -1,4 +1,4 @@
-# .gitignore
-.env
-# node_modules
-node_modules
+node_modules/
+*_sessions
+*qr.png
+*.log
