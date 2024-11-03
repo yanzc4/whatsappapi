@@ -54,7 +54,7 @@ Esta es una api no oficial de whatsapp
 
 ## configurar nginx
 
-- instala cerbot y su plugin de nginx
+- instala certbot y su plugin de nginx
 
     ```bash
     sudo apt install certbot python3-certbot-nginx -y
