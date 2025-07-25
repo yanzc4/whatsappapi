@@ -112,6 +112,11 @@ Esta es una api no oficial de whatsapp
     ```bash
     pm2 start --interpreter npx --name "nombre-de-tu-app" tsm -- ./src/app.ts
 
+- correr api en javascript
+
+    ```bash
+    pm2 start ./src/app.js --name "api"
+
 - comando para guardar e iniciar el api al arrancar el servidor
     
     ```bash
